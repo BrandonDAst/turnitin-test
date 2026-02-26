@@ -1,65 +1,126 @@
-import Image from "next/image";
+"use client"
+import DogCard from "@/components/dogCard";
+import DogFavCard from "@/components/dogFavCard";
+import DogMainCard from "@/components/dogMainCard";
+import { Dog } from "@/types/dog";
+import { CleanDogBreedName, GetDogImageIdentifier } from "@/utils/dogBreedClean";
+import { useEffect, useState } from "react";
 
 export default function Home() {
+
+  const [mainDog, setMainDog] = useState<Dog>();
+  const placeHolder: Dog = {
+    index: "",
+    dogBreed: "",
+    imageUrl: "",
+  }
+
+  const [favoriteDogs, setFavoriteDogs] = useState<Dog[]>([]);
+
+  const [randomDogs, setRandomDogs] = useState<Dog[]>([]);
+
+
+  useEffect(() => {
+    // Fetch main Dog
+    const fetchMainDog = async () => {
+      const response = await fetch('https://dog.ceo/api/breeds/image/random');
+      const data = await response.json();
+
+      console.log("Message:", data.message);
+      console.log("Breed: ", CleanDogBreedName(data.message))
+      console.log("Identifier: ", GetDogImageIdentifier(data.message))
+
+      setMainDog(
+        {
+          index: GetDogImageIdentifier(data.message),
+          imageUrl: data.message,
+          dogBreed: CleanDogBreedName(data.message)
+        });
+    }
+    fetchMainDog();
+
+
+
+    // Fetch Random Dogs
+    const fetchRandomDogs = async () => {
+      const response = await fetch('https://dog.ceo/api/breeds/image/random/10');
+      const data = await response.json();
+
+      setRandomDogs(data.message.map((dog: string) => ({
+        index: GetDogImageIdentifier(dog),
+        imageUrl: dog,
+        dogBreed: CleanDogBreedName(dog)
+      })));
+    }
+    fetchRandomDogs();
+  }, [])
+
+
+
+  const handleSetAsMain = (dog: Dog) => {
+    setMainDog(dog);
+  }
+  const handleAddToFavorites = (dog: Dog) => {
+    const dogSet = new Set(favoriteDogs)
+    dogSet.add(dog);
+    setFavoriteDogs([...dogSet]);
+
+  }
+  const handleRemoveFromFavorites = (dogToRemove: Dog) => {
+    const dogs = favoriteDogs.filter((dog) => dog.index != dogToRemove.index);
+    setFavoriteDogs(dogs);
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <div className="flex min-h-screen flex flex-col items-center">
+      <h1 className="mt-4">Turnitin Test</h1>
+      <div className="flex flex-row p-10">
+        <main className="w-[70%]">
+
+
+
+          <section id="main-dog" className="flex flex-col items-center">
+            <h2 className="my-4 text-center">Dog of the Month</h2>
+            <DogMainCard dog={mainDog || placeHolder} addToFavorites={handleAddToFavorites} />
+          </section>
+
+
+
+
+          <section id="random-dogs" className="mt-10" >
+            <h2 className="my-4 text-center">Random Dogs</h2>
+            <div className="flex flex-wrap gap-5 ">
+              {
+                randomDogs.map((dog) =>
+                  <DogCard
+                    key={dog.index}
+                    dog={dog}
+                    setAsMain={handleSetAsMain}
+                  />)
+              }
+            </div>
+          </section>
+        </main>
+
+
+
+
+
+
+        <aside className="w-[30%] h-full">
+          <h2 className="text-center">Favorites</h2>
+          <div className="flex flex-wrap gap-2 mt-10">
+            {
+              favoriteDogs.map((favDog) =>
+                <DogFavCard key={favDog.index}
+                  dog={favDog}
+                  setAsMain={handleSetAsMain}
+                  removeFromFavs={handleRemoveFromFavorites}
+                ></DogFavCard>)
+            }
+          </div>
+        </aside>
+      </div>
     </div>
   );
 }
