@@ -78,7 +78,7 @@ export default function Home() {
     setSearchTerm(breed.trim().toLowerCase());
   };
   return (
-    <div className="flex min-h-screen flex flex-col items-center">
+    <div className="flex min-h-screen flex-col items-center">
       <h1 className="mt-4">Turnitin Test</h1>
       <div className="flex flex-row p-10">
         <main className="w-[70%]">
